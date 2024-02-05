@@ -546,17 +546,6 @@ fun IntRange.hasOpenLower() : Boolean {
 }
 
 
-fun org.jbox2d.common.Vec2.toVec2f() : Vec2f {
-    return Vec2f(x, y)
-}
-
-fun org.jbox2d.common.Vec2.toVec3f() : Vec3f {
-    return Vec3f(x, y, 0.0f)
-}
-
-fun Vec2f.toBox2d() : org.jbox2d.common.Vec2 {
-    return org.jbox2d.common.Vec2(x, y)
-}
 
 
 fun <A, B> tuple(a: A, b : B) : Pair<A,B> {

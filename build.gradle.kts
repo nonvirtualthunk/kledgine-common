@@ -55,7 +55,6 @@ dependencies {
 	implementation("dev.romainguy:kotlin-math:1.5.0")
 	implementation("it.unimi.dsi:fastutil-core:8.5.8")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-hocon:1.5.0")
-	implementation("org.jbox2d:jbox2d-library:2.3.1-SNAPSHOT")
 	implementation("org.fusesource.jansi:jansi:2.4.1")
 	implementation("org.jline:jline:3.25.1")
 	runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)

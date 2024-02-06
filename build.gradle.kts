@@ -108,3 +108,15 @@ compileTestKotlin.kotlinOptions {
 	languageVersion = "1.9"
 	apiVersion = "1.9"
 }
+
+publishing {
+	publications {
+		create<MavenPublication>("maven") {
+			groupId = "com.nvt"
+			artifactId = "kledgine-common"
+			version = "0.1.1-SNAPSHOT"
+
+			from(components["java"])
+		}
+	}
+}

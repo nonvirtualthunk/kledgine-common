@@ -3,7 +3,6 @@ package arx.application
 import arx.core.*
 import arx.display.ascii.Ascii
 import arx.display.ascii.AsciiGraphics
-import arx.display.ascii.AsciiGraphicsComponent
 import arx.display.ascii.AsciiGraphicsComponentBase
 import arx.display.core.Key
 import arx.display.core.KeyModifiers
@@ -14,13 +13,11 @@ import arx.display.windowing.components.ascii.AsciiBackground
 import arx.display.windowing.components.ascii.AsciiRichText
 import arx.display.windowing.components.registerCustomWidget
 import arx.display.windowing.customwidgets.LabelledTextInput
-import arx.display.windowing.onEventDo
 import arx.engine.*
 import org.fusesource.jansi.AnsiConsole
 import org.jline.jansi.Ansi
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
-import java.awt.Font
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
@@ -36,9 +33,11 @@ data class TuiData (
 data class TerminalInput (var codes: List<Char>, var unhandled: Boolean = false) : DisplayEvent()
 
 
-class TuiApplication(val terminal: Terminal = TerminalBuilder.builder()
-    .system(true)
-    .build()) {
+class TuiApplication {
+    private val terminal: Terminal = TerminalBuilder.builder()
+        .system(true)
+        .build()
+
     init {
         Application.tui = true
         AnsiConsole.systemInstall()

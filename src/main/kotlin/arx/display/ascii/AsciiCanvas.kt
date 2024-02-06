@@ -3,7 +3,6 @@
 package arx.display.ascii
 
 import arx.application.Application
-import arx.application.TuiApplication
 import arx.core.*
 import arx.core.Resources.font
 import arx.core.Resources.image

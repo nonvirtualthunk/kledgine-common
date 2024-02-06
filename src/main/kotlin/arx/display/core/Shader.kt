@@ -6,9 +6,8 @@ import arx.core.Vec3f
 import arx.core.Vec4f
 import dev.romainguy.kotlin.math.Mat4
 import org.lwjgl.opengl.GL20
-import java.io.File
 
-class Shader(val path: String) {
+class Shader(val vertexSource: String, val fragmentSource: String) {
     var program: Int = 0
     var vertexShader: Int = 0
     var fragmentShader: Int = 0
@@ -25,8 +24,8 @@ class Shader(val path: String) {
     fun load() {
         program = GL20.glCreateProgram()
         GL.checkError()
-        vertexShader = createShaderFromPath("$path.vertex", GL20.GL_VERTEX_SHADER)
-        fragmentShader = createShaderFromPath("$path.fragment", GL20.GL_FRAGMENT_SHADER)
+        vertexShader = createShaderFromSource(vertexSource, GL20.GL_VERTEX_SHADER)
+        fragmentShader = createShaderFromSource(fragmentSource, GL20.GL_FRAGMENT_SHADER)
         GL.checkError()
 
         GL20.glAttachShader(program, vertexShader)
@@ -71,9 +70,8 @@ class Shader(val path: String) {
     }
 
     companion object {
-        private fun createShaderFromPath(path: String, type: Int): Int {
+        private fun createShaderFromSource(src: String, type: Int): Int {
             val shader: Int = GL20.glCreateShader(type)
-            val src = File(path).readText()
             GL20.glShaderSource(shader, src)
             GL20.glCompileShader(shader)
 
@@ -87,7 +85,7 @@ class Shader(val path: String) {
             GL.checkError()
             if (compiled == 0) {
                 System.err.println("Shader source\n${GL20.glGetShaderSource(shader)}")
-                throw AssertionError("Could not compile shader: $path")
+                throw AssertionError("Could not compile shader")
             }
             return shader
         }

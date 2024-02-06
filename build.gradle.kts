@@ -5,6 +5,7 @@ import org.gradle.jvm.tasks.Jar
 plugins {
 	kotlin("jvm") version "1.7.21"
 	kotlin("plugin.serialization") version "1.8.20"
+	id("maven-publish")
 }
 
 val lwjglVersion = "3.3.1"
@@ -106,28 +107,4 @@ compileTestKotlin.kotlinOptions {
 	jvmTarget = "17"
 	languageVersion = "1.9"
 	apiVersion = "1.9"
-}
-
-val fatJar = task("fatJar", type = Jar::class) {
-//	arB = "${project.name}-fat"
-	manifest {
-		attributes["Implementation-Title"] = "Gradle Jar File Example"
-		attributes["Main-Class"] = "arx.application.TuiApplicationKt"
-		duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	}
-	from(configurations.runtimeClasspath.get().map {
-		if (it.isDirectory) {
-			it
-		} else {
-			zipTree(it)
-		}
-	})
-
-	with(tasks.jar.get() as CopySpec)
-}
-
-tasks {
-	"build" {
-		dependsOn(fatJar)
-	}
 }

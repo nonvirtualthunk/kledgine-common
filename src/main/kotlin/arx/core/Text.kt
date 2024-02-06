@@ -13,6 +13,7 @@ import java.awt.font.TextAttribute
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.io.File
+import java.io.InputStream
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.text.AttributedString
@@ -98,6 +99,10 @@ class ArxTypeface(internal val baseAwtFont: Font) {
     companion object {
         fun load(path: String) : ArxTypeface {
             return ArxTypeface(Font.createFont(Font.TRUETYPE_FONT, File(path)))
+        }
+
+        fun load(stream: InputStream) : ArxTypeface {
+            return ArxTypeface(Font.createFont(Font.TRUETYPE_FONT, stream))
         }
     }
 }

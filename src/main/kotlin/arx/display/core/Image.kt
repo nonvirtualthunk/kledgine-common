@@ -9,10 +9,12 @@ import com.typesafe.config.ConfigValue
 import dev.romainguy.kotlin.math.fract
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import org.lwjgl.BufferUtils
 import org.lwjgl.stb.STBImage
 import org.lwjgl.stb.STBImageWrite
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
+import java.io.InputStream
 import java.nio.ByteBuffer
 
 @Serializable
@@ -402,6 +404,37 @@ open class Image internal constructor() : ImageRef {
                     val channels = stack.callocInt(1)
                     STBImage.nstbi_set_flip_vertically_on_load(1)
                     val buff = STBImage.stbi_load(path, width, height, channels, 4)
+
+                    if (buff == null) {
+                        System.err.println("Could not load image: $path")
+                        SentinelImageRef.img
+                    } else {
+                        val img = Image()
+                        img.data = buff
+                        img.dimensions = Vec2i(width.get(0), height.get(0))
+                        img.ymult = img.dimensions.x * 4
+                        img.path = path
+
+                        img
+                    }
+                }
+            }
+        }
+
+        fun load(stream: InputStream, path: String) : Image {
+            return ImageLoadingTimer.timeStmt {
+
+                val bytes = stream.readAllBytes()
+                MemoryStack.stackPush().use { stack ->
+                    val width = stack.callocInt(1)
+                    val height = stack.callocInt(1)
+                    val channels = stack.callocInt(1)
+                    STBImage.nstbi_set_flip_vertically_on_load(1)
+                    val inputBuffer = BufferUtils.createByteBuffer(bytes.size)
+                    inputBuffer.put(bytes)
+                    inputBuffer.flip()
+
+                    val buff = STBImage.stbi_load_from_memory(inputBuffer, width, height, channels, 4)
 
                     if (buff == null) {
                         System.err.println("Could not load image: $path")

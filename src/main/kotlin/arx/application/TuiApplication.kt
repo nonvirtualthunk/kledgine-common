@@ -36,7 +36,9 @@ data class TuiData (
 data class TerminalInput (var codes: List<Char>, var unhandled: Boolean = false) : DisplayEvent()
 
 
-class TuiApplication(val terminal: Terminal) {
+class TuiApplication(val terminal: Terminal = TerminalBuilder.builder()
+    .system(true)
+    .build()) {
     init {
         Application.tui = true
         AnsiConsole.systemInstall()
@@ -62,13 +64,22 @@ class TuiApplication(val terminal: Terminal) {
     }
 
     fun run(engine: Engine, postSetup: World.() -> Unit = {}) {
-        this.engine = engine
+        AnsiConsole.out().print("\u001B[?25l")
 
-        init()
+        terminal.enterRawMode()
 
-        engine.world.postSetup()
+        try {
+            this.engine = engine
 
-        loop()
+            init()
+
+            engine.world.postSetup()
+
+            loop()
+        } finally {
+            AnsiConsole.out().print("\u001B[?25h")
+            terminal.close()
+        }
     }
 
     private fun init() {
@@ -288,31 +299,15 @@ object TuiTest : DisplayComponent(initializePriority = Priority.Last) {
 }
 
 fun main(args: Array<String>) {
-    AnsiConsole.systemInstall()
 
-    val terminal = TerminalBuilder.builder()
-        .system(true)
-        .build()
+    TuiApplication().apply {
 
-    try {
-
-        AnsiConsole.out().print("\u001B[?25l")
-
-        terminal.enterRawMode()
-
-        TuiApplication(terminal).apply {
-
-        }.run(
-            Engine(
-                mutableListOf(),
-                mutableListOf(AsciiGraphicsComponentBase(), AsciiWindowingSystemComponent(), TuiTest)
-            )
+    }.run(
+        Engine(
+            mutableListOf(),
+            mutableListOf(AsciiGraphicsComponentBase(), AsciiWindowingSystemComponent(), TuiTest)
         )
-
-    } finally {
-        AnsiConsole.out().print("\u001B[?25h")
-        terminal.close()
-    }
+    )
 
 
 

@@ -16,14 +16,12 @@ import arx.display.windowing.customwidgets.HSLSliderWidget
 import arx.engine.*
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
 import dev.romainguy.kotlin.math.Float4
 import dev.romainguy.kotlin.math.Mat4
 import dev.romainguy.kotlin.math.inverse
 import dev.romainguy.kotlin.math.ortho
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import java.awt.Font
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.lang.ref.WeakReference
@@ -1259,6 +1257,6 @@ class AsciiWindowingSystem(val asciiCanvas : AsciiCanvas) : WindowingSystem() {
     }
 
     override fun defaultStylesheet() : Config {
-        return Resources.config("/arx/display/widgets/AsciiStylesheet.sml")
+        return Resources.config("arx/display/widgets/AsciiStylesheet.sml")
     }
 }

@@ -132,13 +132,13 @@ object AsciiDropdownComponent : WindowingComponent {
                 AsciiTextLayout.Params(
                     text = rendered + tern(dd.showMenuArrow, "►", ""),
                     region = Recti(0,0,1000,10000),
-                    defaultScale = dd.textDisplaySettings.scale.invoke() ?: w.windowingSystem.scale,
+                    defaultScale = w.windowingSystem.effectiveScale(dd.textDisplaySettings.scale),
                     position = Vec2i(0,0),
                 )
             )
 
             val extra = if (dd.showMenuArrow && axis == Axis2D.X) {
-                dd.textDisplaySettings.scale() ?: w.windowingSystem.scale
+                w.windowingSystem.effectiveScale(dd.textDisplaySettings.scale)
             } else {
                 0
             }

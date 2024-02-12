@@ -38,7 +38,7 @@ data class CharacterPickerWidget (
 
             val sortedChars = Ascii.allChars.sorted() + CustomChars.customGlyphs.keys.toList()
             var index = 0
-            val scale = cpw.scale ?: ws.scale
+            val scale = ws.effectiveScale(cpw.scale)
             val renderedPositions = mutableMapOf<Vec3i, Char>()
             for (y in 0 until (height - scale) step (scale + 1)) {
                 for (x in 0 until (width - scale) step (scale + 1)) {
@@ -67,7 +67,7 @@ data class CharacterPickerWidget (
         override fun handleEvent(w: Widget, event: DisplayEvent): Boolean {
             val cpw = w[CharacterPickerWidget] ?: return false
 
-            val scale = cpw.scale ?: w.windowingSystem.scale
+            val scale = w.windowingSystem.effectiveScale(cpw.scale)
             when (event) {
                 is WidgetMouseReleaseEvent -> {
                     val x = event.position.x.toInt()

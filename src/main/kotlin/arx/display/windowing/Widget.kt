@@ -1307,7 +1307,7 @@ inline fun forEachPositionDep(w: Widget, axis: Axis, fn: (Widget, DependencyKind
                         fn(w, DependencyKind.Dimensions, axis)
                     }
                 } else {
-                    Noto.warn("Relative widget position could not resolve relativeTo: ${p.relativeTo}")
+                    Noto.warn("Relative widget ${w.identifier} position could not resolve relativeTo: ${p.relativeTo}")
                 }
             }
             is WidgetPosition.Absolute -> {

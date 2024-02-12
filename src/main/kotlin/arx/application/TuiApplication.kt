@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package arx.application
 
 import arx.core.*
 import arx.display.ascii.Ascii
 import arx.display.ascii.AsciiGraphics
+import arx.display.ascii.AsciiGraphicsComponent
 import arx.display.ascii.AsciiGraphicsComponentBase
 import arx.display.core.Key
 import arx.display.core.KeyModifiers
@@ -13,12 +16,15 @@ import arx.display.windowing.components.ascii.AsciiBackground
 import arx.display.windowing.components.ascii.AsciiRichText
 import arx.display.windowing.components.registerCustomWidget
 import arx.display.windowing.customwidgets.LabelledTextInput
+import arx.display.windowing.onEventDo
 import arx.engine.*
 import org.fusesource.jansi.AnsiConsole
 import org.jline.jansi.Ansi
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
+import java.awt.Font
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.LockSupport
 
@@ -33,13 +39,11 @@ data class TuiData (
 data class TerminalInput (var codes: List<Char>, var unhandled: Boolean = false) : DisplayEvent()
 
 
-class TuiApplication {
-    private val terminal: Terminal = TerminalBuilder.builder()
-        .system(true)
-        .build()
-
+class TuiApplication(val terminal: Terminal = TerminalBuilder.builder()
+    .system(true)
+    .build()) {
     init {
-        Application.tui = true
+        Application.tui = terminal.width != 0
         AnsiConsole.systemInstall()
     }
 
@@ -55,9 +59,34 @@ class TuiApplication {
 
     companion object {
         val debugTextBuffer : ConcurrentLinkedQueue<String> = ConcurrentLinkedQueue()
+
+        fun main(gameComponents: List<GameComponent>, displayComponents: List<DisplayComponent>) {
+            val filteredDComps = (displayComponents.filterNot { it is AsciiGraphicsComponentBase } + AsciiWindowingSystemComponent()).distinct()
+
+            val tuiApp = TuiApplication()
+
+            if (Application.tuiSize != Vec2i(-1,-1)) {
+                tuiApp.apply {
+
+                }.run(
+                    Engine(
+                        gameComponents,
+                        filteredDComps + AsciiGraphicsComponentBase()
+                    )
+                )
+            } else {
+                Application().run(
+                    Engine(
+                        gameComponents,
+                        filteredDComps + AsciiGraphicsComponent()
+                    )
+                )
+            }
+        }
     }
 
     init {
+        Application.tuiSize = Vec2i(terminal.width - 1, terminal.height - 1)
 //        System.setProperty("java.awt.headless", "true")
         ConfigRegistration
     }
@@ -66,6 +95,10 @@ class TuiApplication {
         AnsiConsole.out().print("\u001B[?25l")
 
         terminal.enterRawMode()
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            AnsiConsole.out().print("\u001B[?25h")
+        })
 
         try {
             this.engine = engine
@@ -82,8 +115,6 @@ class TuiApplication {
     }
 
     private fun init() {
-        Application.tuiSize = Vec2i(terminal.width - 1, terminal.height - 1)
-
         engine.initialize()
     }
 
@@ -95,9 +126,32 @@ class TuiApplication {
 
         var carryover : Char? = null
 
+        val lastPressed : AtomicReference<Key?> = AtomicReference(null)
+        val lastPressedTime = AtomicLong(0L)
+
         val inputThread = Thread {
             val ba = ByteArray(100)
             var remaining = -1
+            val shiftChars = setOf('!','@','#','$','%','^','&','*','(',')','_','+','{','}','<','>','?','"',':','~','|')
+
+            fun handleKeyDown(key: Key, c: Char?, modifiers: KeyModifiers) {
+                KeyModifiers.activeModifiers = modifiers
+
+                val oldKey = lastPressed.getAndSet(key)
+                if (oldKey != key && oldKey != null) {
+                    eventBuffer.add(KeyReleaseEvent(oldKey, modifiers))
+                    Key.setIsDown(oldKey, false)
+                }
+                eventBuffer.add(KeyPressEvent(key, modifiers, isRepeat = key == lastPressed.get()))
+                lastPressed.set(key)
+                lastPressedTime.set(System.currentTimeMillis())
+                Key.setIsDown(key, true)
+
+                if (c != null) {
+                    eventBuffer.add(CharInputEvent(c))
+                }
+            }
+
             while (!shouldClose) {
                 if (carryover != null) {
                     ba[0] = carryover!!.code.toByte()
@@ -158,8 +212,7 @@ class TuiApplication {
 
                                     if (key != null) {
                                         handled = true
-                                        eventBuffer.add(KeyPressEvent(key, modifiers))
-                                        eventBuffer.add(KeyReleaseEvent(key, modifiers))
+                                        handleKeyDown(key, null, modifiers)
                                     }
                                 }
                             }
@@ -184,15 +237,17 @@ class TuiApplication {
                     }
                 }
 
+                if (char?.isUpperCase() == true || shiftChars.contains(char)) {
+                    modifiers = modifiers.copy(shift = true)
+                }
+
 //                debugStr.set(debugStr.get() + "," + code)
 
                 key?.let {
-                    eventBuffer.add(KeyPressEvent(it, modifiers, false))
-                    eventBuffer.add(KeyReleaseEvent(it, KeyModifiers()))
+                    handleKeyDown(it, char, modifiers)
                 }
 
                 eventBuffer.add(TerminalInput(listOf(c)))
-                char?.let { eventBuffer.add(CharInputEvent(it)) }
             }
         }
 
@@ -215,8 +270,6 @@ class TuiApplication {
 
             if (engine.updateDisplayState()) {
                 engine.draw()
-            } else {
-                Thread.sleep(5)
             }
 
             AnsiConsole.out().print(Ansi.ansi().fgRgb(255,255,255).cursor(1,1).a(debugStr.get()))
@@ -228,6 +281,14 @@ class TuiApplication {
 
             while (debugTextBuffer.isNotEmpty()) {
                 engine.world[TuiData].debugText = AsciiRichText(debugTextBuffer.remove())
+            }
+
+            if (lastPressedTime.get() < System.currentTimeMillis() - 50) {
+                val oldKey = lastPressed.getAndSet(null)
+                if (oldKey != null) {
+                    Key.setIsDown(oldKey, false)
+                    engine.handleEvent(KeyReleaseEvent(oldKey, KeyModifiers.activeModifiers))
+                }
             }
         }
 
@@ -299,14 +360,15 @@ object TuiTest : DisplayComponent(initializePriority = Priority.Last) {
 
 fun main(args: Array<String>) {
 
-    TuiApplication().apply {
+    TuiApplication.main(emptyList(), listOf(TuiTest))
 
-    }.run(
-        Engine(
-            mutableListOf(),
-            mutableListOf(AsciiGraphicsComponentBase(), AsciiWindowingSystemComponent(), TuiTest)
-        )
-    )
+//    Application().run(
+//        Engine(
+//            emptyList(),
+//            listOf(TuiTest, AsciiGraphicsComponent(), AsciiWindowingSystemComponent())
+//        )
+//    )
+}
 
 
 
@@ -351,4 +413,3 @@ fun main(args: Array<String>) {
 //Thread.sleep(5000)
 //
 //    AnsiConsole.systemUninstall()
-}

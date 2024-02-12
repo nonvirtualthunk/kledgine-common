@@ -70,7 +70,7 @@ object AsciiBackgroundComponent : WindowingComponent {
 
     override fun clientOffsetContributionNear(w: Widget, axis: Axis2D): Int {
         return if (w.background.draw() && w.background.drawEdges()) {
-            return w.windowingSystem.forceScale ?: w[AsciiBackground]?.scale?.invoke() ?: w.windowingSystem.scale
+            return w.windowingSystem.effectiveScale(w[AsciiBackground]?.scale)
         } else {
             0
         }
@@ -86,7 +86,7 @@ object AsciiBackgroundComponent : WindowingComponent {
                     position = w.resolvedPosition,
                     dimensions = w.resolvedDimensions,
                     style = ab?.style?.invoke() ?: Ascii.BoxStyle.SolidExternal,
-                    scale = w.windowingSystem.forceScale ?: ab?.scale?.invoke() ?: ws.scale,
+                    scale = w.windowingSystem.effectiveScale(ab?.scale),
                     edgeColor = w.background.edgeColor() ?: w.background.color() ?: White,
                     fillColor = tern((ab?.drawCenter?.invoke() ?: false) || w.background.centerColor() != null, w.background.centerColor() ?: Black, Clear),
                     join = false

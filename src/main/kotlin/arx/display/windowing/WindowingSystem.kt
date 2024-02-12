@@ -1112,6 +1112,17 @@ open class WindowingSystem : DisplayData, CreateOnAccessData {
         }
     }
 
+    fun effectiveScale(override: Int?) : Int {
+        return forceScale ?: override ?: scale
+    }
+
+    fun effectiveScale(override: Bindable<Int?>?) : Int {
+        return forceScale ?: override?.invoke() ?: scale
+    }
+    fun effectiveScale(): Int {
+        return forceScale ?: scale
+    }
+
     fun projectionMatrix(): Mat4 {
         return ortho(desktop.resX.toFloat(), (desktop.resX + desktop.resWidth + 1).toFloat(), (desktop.resY + desktop.resHeight).toFloat(), desktop.resY.toFloat(), 0.0f, 100.0f)
     }

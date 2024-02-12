@@ -26,6 +26,9 @@ class AsciiWindowingSystemComponent  : DisplayComponent(initializePriority = Pri
         canvas = world[AsciiGraphics].createCanvas()
 
         val ws = AsciiWindowingSystem(canvas)
+        if (Application.tui) {
+            ws.forceScale = 1
+        }
         world.attachData(world.globalEntity, WindowingSystem, ws)
         world.attachData(world.globalEntity, AsciiWindowingSystem, ws)
 

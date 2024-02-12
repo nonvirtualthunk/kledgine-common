@@ -56,9 +56,9 @@ object AsciiDividerComponent : WindowingComponent {
         val ad = w[AsciiDivider] ?: return null
 
         if (axis == Axis2D.Y && ad.horizontal) {
-            return ad.scale ?: w.windowingSystem.scale
+            return w.windowingSystem.effectiveScale(ad.scale)
         } else if (axis == Axis2D.X && !ad.horizontal){
-            return ad.scale ?: w.windowingSystem.scale
+            return w.windowingSystem.effectiveScale(ad.scale)
         } else {
             return null
         }
@@ -74,7 +74,7 @@ object AsciiDividerComponent : WindowingComponent {
                     clientPos,
                     clientPos + Vec3i(w.resWidth, 0, 0),
                     ad.style,
-                    ad.scale ?: ws.scale,
+                    ws.effectiveScale(ad.scale),
                     ad.foregroundColor(),
                     ad.backgroundColor()
                 )
@@ -85,7 +85,7 @@ object AsciiDividerComponent : WindowingComponent {
                     clientPos,
                     clientPos + Vec3i(0, w.resHeight, 0),
                     ad.style,
-                    ad.scale ?: ws.scale,
+                    ws.effectiveScale(ad.scale),
                     ad.foregroundColor(),
                     ad.backgroundColor()
                 )

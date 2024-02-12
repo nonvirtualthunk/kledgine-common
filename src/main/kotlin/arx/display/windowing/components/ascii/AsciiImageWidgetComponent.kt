@@ -81,7 +81,7 @@ object AsciiImageWidgetComponent : WindowingComponent {
                     resolved
                 }
             }
-            is AmgRef -> raw
+            is AmgRef, AsciiCanvas -> raw
             is ImageRef -> {
                 if (raw.isSentinel()) {
                     null
@@ -101,13 +101,15 @@ object AsciiImageWidgetComponent : WindowingComponent {
         val id = w[AsciiImageWidget] ?: return null
         val rawImg = resolveImage(w, id) ?: return null
 
-        val scale = w.windowingSystem.forceScale ?: id.scale ?: w.windowingSystem.scale
+        val scale = w.windowingSystem.effectiveScale(id.scale)
 
         when (rawImg) {
             is AmgRef -> {
                 val amg = rawImg.toAmg()
                 return amg.dimensions[axis] * scale
             }
+            is AsciiCanvas ->
+                return rawImg.dimensions[axis] * scale
             is ImageRef -> {
                 val img = rawImg.toImage()
                 val font = (w.windowingSystem as AsciiWindowingSystem).font
@@ -125,12 +127,13 @@ object AsciiImageWidgetComponent : WindowingComponent {
 
         val rawImg = resolveImage(w, id) ?: return
 
-        val scale = ws.forceScale ?: id.scale ?: ws.scale
+        val scale = ws.effectiveScale(id.scale)
 
         val imgCanvas = when (rawImg) {
             is AmgRef -> {
                 rawImg.toAmg()
             }
+            is AsciiCanvas -> rawImg
             is ImageRef -> {
                 val img = rawImg.toImage()
                 val p = Params(img, Vec2i(w.resClientWidth / scale, w.resClientHeight / scale))

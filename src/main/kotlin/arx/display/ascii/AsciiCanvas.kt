@@ -683,12 +683,12 @@ open class AsciiGraphicsComponentBase : DisplayComponent(initializePriority = Pr
             ansi.cursor(buf.dimensions.y - y, 1)
             for (x in 0 until buf.dimensions.x) {
                 val c = buf.chars[buf.index(x, y)]
-                if (back == null || back.chars[buf.index(x,y)] != c) {
+                if (back == null || back.chars[back.index(x,y)] != c) {
                     val char = Char((c and AsciiBuffer.characterMask).toInt())
                     val foregroundEncoded = ((c and AsciiBuffer.foregroundMask) shr AsciiBuffer.foregroundShift).toUInt()
                     val backgroundEncoded = ((c and AsciiBuffer.backgroundMask) shr AsciiBuffer.backgroundShift).toUInt()
 
-                    if (prevX != x + 1) {
+                    if (prevX != x) {
                         ansi.cursorToColumn(x + 1)
                     }
                     prevX = x + 1

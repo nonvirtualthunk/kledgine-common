@@ -203,6 +203,10 @@ data class KeyModifiers(val mask: Int) {
         return ret
     }
 
+    fun copy(shift: Boolean = this.shift, ctrl : Boolean = this.ctrl, alt: Boolean = this.alt) : KeyModifiers {
+        return KeyModifiers(shift, ctrl, alt)
+    }
+
     companion object {
         @Volatile
         var activeModifiers: KeyModifiers = KeyModifiers(0)

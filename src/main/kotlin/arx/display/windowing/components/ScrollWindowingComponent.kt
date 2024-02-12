@@ -111,9 +111,9 @@ object ScrollWindowingComponent : WindowingComponent {
 
         if (shouldShowScrollbar(w, sb)) {
             if (sb.verticalScroll && axis == Axis2D.X) {
-                return w.windowingSystem.scale
+                return w.windowingSystem.effectiveScale()
             } else if (sb.horizontalScroll && axis == Axis2D.Y) {
-                return w.windowingSystem.scale
+                return w.windowingSystem.effectiveScale()
             } else {
                 return null
             }
@@ -134,7 +134,7 @@ object ScrollWindowingComponent : WindowingComponent {
         val sb = w[ScrollbarData] ?: return
 
         if (shouldShowScrollbar(w, sb)) {
-            val scale = w.windowingSystem.scale
+            val scale = w.windowingSystem.effectiveScale()
             if (sb.verticalScroll) {
                 val x = w.resClientX + w.resClientWidth + w.padding.x
                 val y = w.resClientY
@@ -145,6 +145,7 @@ object ScrollWindowingComponent : WindowingComponent {
                 commandsOut.add(AsciiDrawCommand.Glyph('▬', Vec3i(x,y + w.resClientHeight / 2, z), scale, ArrowColor, White))
                 commandsOut.add(AsciiDrawCommand.Glyph('▼', Vec3i(x,y + w.resClientHeight - scale,z), scale, ArrowColor, White))
             }
+            // TODO: Draw horizontal scroll
         }
     }
 
@@ -165,6 +166,20 @@ object ScrollWindowingComponent : WindowingComponent {
                 } else if (event.key == Key.Down && sb.verticalScroll && show.value) {
                     if (w.localY > -sb.scrollMax.y || sb.keyScrollActive.y != 0) {
                         sb.keyScrollActive.y = -1
+                        true
+                    } else {
+                        false
+                    }
+                } else if (event.key == Key.Left && sb.horizontalScroll && show.value) {
+                    if (w.localX < -sb.scrollMin.x || sb.keyScrollActive.x != 0) {
+                        sb.keyScrollActive.x = 1
+                        true
+                    } else {
+                        false
+                    }
+                } else if (event.key == Key.Right && sb.horizontalScroll && show.value) {
+                    if (w.localX > -sb.scrollMax.x || sb.keyScrollActive.x != 0) {
+                        sb.keyScrollActive.x = -1
                         true
                     } else {
                         false
@@ -190,6 +205,14 @@ object ScrollWindowingComponent : WindowingComponent {
                         val wy = o.resY + o.resHeight
                         val py = w.resClientY + w.resClientHeight
                         scroll(w, sb, 0, py - wy)
+                    }
+
+                    if (o.resX < w.resClientX) {
+                        scroll(w, sb, w.resClientX - o.resX, 0)
+                    } else if (o.resX + o.resWidth > w.resClientX + w.resClientWidth) {
+                        val wx = o.resX + o.resWidth
+                        val px = w.resClientX + w.resClientWidth
+                        scroll(w, sb, px - wx, 0)
                     }
                 }
                 false
@@ -236,6 +259,31 @@ object ScrollWindowingComponent : WindowingComponent {
                     scroll(w, sb, 0, sb.scrollSpeed * sb.keyScrollActive.y)
                 } else if (sb.buttonScrollActive.y != 0) {
                     scroll(w, sb, 0, sb.scrollSpeed * sb.buttonScrollActive.y)
+                }
+
+
+
+                if (sb.keyScrollActive.x != 0) {
+                    if (!Key.isDown(Key.Left) && !Key.isDown(Key.Right)) {
+                        sb.keyScrollActive.x = 0
+                    }
+                }
+                if (sb.buttonScrollActive.x != 0) {
+                    if (!MouseButton.leftDown) {
+                        sb.buttonScrollActive.x = 0
+                    }
+                }
+
+
+                val xScrollMult = if (windowingSystem is AsciiWindowingSystem) {
+                    2
+                } else {
+                    1
+                }
+                if (sb.keyScrollActive.x != 0) {
+                    scroll(w, sb, sb.scrollSpeed * sb.keyScrollActive.x * xScrollMult, 0)
+                } else if (sb.buttonScrollActive.x != 0) {
+                    scroll(w, sb, sb.scrollSpeed * sb.buttonScrollActive.x * xScrollMult, 0)
                 }
             }
         }

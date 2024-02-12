@@ -208,22 +208,24 @@ data class HSLSliderWidget (
             val selC = cpw.selectedColor()
             val tmpHSL = HSL(selC.h, selC.s, selC.l, selC.a)
 
+            val scale = ws.effectiveScale(1)
+
             val selIndex = cpw.channel?.let { channel ->
-                (0 until width step ws.scale).find { x ->
+                (0 until width step scale).find { x ->
                     val f = valueAt(w, x)
                     f >= selC[channel]
-                } ?: (width - ws.scale)
+                } ?: (width - scale)
             }
 
-            for (x in 0 until width step ws.scale) {
+            for (x in 0 until width step scale) {
                 val f = valueAt(w, x)
 
                 var char = Ascii.FullBlockChar
                 cpw.channel?.let {
                     tmpHSL[it] = f
-                    if (selIndex == x + ws.scale) {
+                    if (selIndex == x + scale) {
                         char = '▐'
-                    } else if (selIndex == x - ws.scale) {
+                    } else if (selIndex == x - scale) {
                         char = '▌'
                     }
                 }
@@ -236,18 +238,18 @@ data class HSLSliderWidget (
 
                 if (char == Ascii.FullBlockChar) {
                     for (y in 0 until height) {
-                        for (dx in 0 until ws.scale) {
+                        for (dx in 0 until scale) {
                             commandsOut.add(AsciiDrawCommand.Glyph(char, Vec3i(px + x + dx, py + y, pz), 1, fgColor, tmpHSL.toRGBA()))
                         }
                     }
                 } else {
-                    for (y in 0 until height step ws.scale) {
-                        commandsOut.add(AsciiDrawCommand.Glyph(char, Vec3i(px + x, py + y, pz), ws.scale, fgColor, tmpHSL.toRGBA()))
+                    for (y in 0 until height step scale) {
+                        commandsOut.add(AsciiDrawCommand.Glyph(char, Vec3i(px + x, py + y, pz), scale, fgColor, tmpHSL.toRGBA()))
                     }
                 }
 
                 if (char == '▐' || char == '▌') {
-                    val s = w[AsciiBackground]?.scale?.invoke() ?: ws.scale
+                    val s = ws.effectiveScale(w[AsciiBackground]?.scale)
 //                    commandsOut.add(AsciiDrawCommand.Glyph('┬', Vec3i(px + x + 1, w.resY, 0), s, White, Clear))
 //                    commandsOut.add(AsciiDrawCommand.Glyph('┴', Vec3i(px + x + 1, w.resY + w.resHeight - 1, 0), s, White, Clear))
                     val dx = if (char == '▌') { +0 } else { +1 }

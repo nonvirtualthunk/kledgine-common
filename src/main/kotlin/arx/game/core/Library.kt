@@ -110,7 +110,7 @@ abstract class Library<T> {
         if (path?.exists() != true) {
             path = Resources.pickPath(readFromPath)?.toPath()
             if (path == null) {
-                Noto.warn("${this.javaClass.simpleName} could not find file $path, skipping")
+                Noto.warn("${this.javaClass.simpleName} could not find file $readFromPath, skipping")
                 return
             }
         }

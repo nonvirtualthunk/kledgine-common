@@ -98,7 +98,7 @@ object FocusWindowingComponent : WindowingComponent {
                         position = w.resolvedPosition,
                         dimensions = w.resolvedDimensions,
                         style = ab?.style?.invoke() ?: Ascii.BoxStyle.SolidExternal,
-                        scale = ab?.scale?.invoke() ?: ws.scale,
+                        scale = ws.effectiveScale(ab?.scale),
                         edgeColor = color,
                         fillColor = Clear,
                         join = false
